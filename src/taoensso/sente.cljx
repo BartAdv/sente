@@ -672,14 +672,14 @@
 (defn- send-buffered-server-evs>ajax-clients!
   "Actually pushes buffered events (as packed-str) to all uid's Ajax conns.
   Allows some time for possible Ajax poller reconnects."
-  [conns_ uid buffered-evs-pstr]
+  [conns_ uid buffered-evs-pstr & {:keys [nmax-attempts ms-base ms-rand]
+                                   ;; <= 7 attempts at ~135ms ea = 945ms
+                                   :or   {nmax-attempts 7
+                                          ms-base       90
+                                          ms-rand       90}}]
+  ;; (* 7 (+ 90 (/ 90 2.0))) ~= 945ms
   (tracef "send-buffered-server-evs>ajax-clients!: %s" buffered-evs-pstr)
-  (let [nmax-attempts 7
-        ms-base 90
-        ms-rand 90
-        ;; (* 7 (+ 90 (/ 90 2.0))) ~= 945ms
-
-        ;; All connected/possibly-reconnecting client uuids:
+  (let [;; All connected/possibly-reconnecting client uuids:
         client-ids-unsatisfied (keys (get-in @conns_ [:ajax uid]))]
 
     (when-not (empty? client-ids-unsatisfied)
